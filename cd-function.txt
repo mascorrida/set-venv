@@ -1,0 +1,32 @@
+
+# プロジェクトディレクトリに移動し、.venv があれば自動で有効化する関数
+cd() {
+    # 第一引数がない場合はhome directoryへ移動
+    if [ -z "$1" ]; then
+        builtin cd ~
+        return 0
+    fi
+
+    # 移動先のディレクトリへ
+    builtin cd "$1" || return
+
+    # .venv があるか確認
+    if [ -d ".venv" ]; then
+        # 現在の有効な venv のパス（なければ空文字）
+        current_venv=$(python3 -c "import sys; print(sys.prefix)" 2>/dev/null)
+        new_venv=$(builtin cd .venv && pwd)
+
+        if [ "$current_venv" != "$new_venv" ]; then
+            echo "Activating virtual environment in $(pwd)/.venv"
+            # bash と zsh でパスが違う場合があるため両方を考慮
+            if [ -f ".venv/bin/activate" ]; then
+                source ".venv/bin/activate"
+            elif [ -f ".venv/Scripts/activate" ]; then
+                source ".venv/Scripts/activate"
+            fi
+        else
+            echo "Already using the correct virtual environment."
+        fi
+    fi
+}
+
